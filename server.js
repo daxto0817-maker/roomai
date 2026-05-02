@@ -45,7 +45,7 @@ app.post('/generate', upload.single('image'), async (req, res) => {
     const roomDesc = response.choices[0].message.content;
 
     const imageResponse = await openai.images.generate({
-      model: 'gpt-image-1',
+      model: 'gpt-image-2',
       prompt: `Professional real estate photo of a furnished Japanese apartment. Room: ${roomDesc}. Style: ${stylePrompts[style]}. Keep exact same walls, floors, windows. Add sofa, coffee table, rug, plants. Photorealistic.`,
       size: '1024x1024',
       n: 1
