@@ -25,18 +25,57 @@ app.post('/generate', upload.single('image'), async (req, res) => {
   try {
     const style = req.body.style || 'nordic';
     const imagePath = req.file.path;
+    const imageBuffer = fs.readFileSync(imagePath);
+    const base64Image = imageBuffer.toString('base64');
+    const mimeType = req.file.mimetype;
 
-    const prompt = `Japanese apartment room, same room structure and layout as original photo. Keep ALL walls, floors, ceiling, windows, doors, AC unit, kitchen island EXACTLY as they are. Keep exact same camera angle and perspective. Add ${stylePrompts[style]} furniture only: small sofa, coffee table, rug, indoor plant, floor lamp. Real estate staging photo style, wide angle shot, photorealistic, cozy and warm atmosphere.`;
+    const analysis = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
+          { type: 'text', text: `Analyze this vacant Japanese apartment room. Return ONLY these details in this exact format:
+LAYOUT: [room type, approximate size]
+WALLS: [exact colors and materials]
+FLOOR: [exact material and color]
+CEILING: [height, features like beams or lighting]
+WINDOWS: [number, size, frame color, position]
+FIXED: [AC unit position, kitchen details, any fixed elements]
+CAMERA: [angle, height, focal length description]` }
+        ]
+      }],
+      max_tokens: 400
+    });
 
-    const imageResponse = await openai.images.edit({
+    fs.unlinkSync(imagePath);
+    const roomDesc = analysis.choices[0].message.content;
+
+    const prompt = `Professional real estate staging photo of a furnished Japanese apartment.
+ROOM DETAILS (keep exactly as described):
+${roomDesc}
+
+FURNITURE TO ADD (${stylePrompts[style]}):
+- Small sofa appropriate for room size
+- Coffee table
+- Rug under sofa
+- Indoor plant
+- Floor lamp
+
+STRICT RULES:
+- Same camera angle, height and focal length as original
+- Keep ALL structural elements exactly as described
+- Furniture size must match room proportions
+- Photorealistic, cozy and warm atmosphere
+- Wide angle shot, real estate staging style`;
+
+    const imageResponse = await openai.images.generate({
       model: 'gpt-image-2',
-      image: fs.createReadStream(imagePath),
       prompt: prompt,
       size: '1024x1024',
       n: 1
     });
 
-    fs.unlinkSync(imagePath);
     const imageData = imageResponse.data[0].b64_json;
     res.json({ success: true, image: imageData });
 
