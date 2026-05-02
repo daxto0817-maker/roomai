@@ -13,12 +13,12 @@ app.use(express.json());
 app.options('*', cors());
 
 const stylePrompts = {
-  nordic: 'Scandinavian Nordic style: light wood furniture, white sofa, warm lighting, potted plants, minimal decor',
-  modern: 'Modern style: dark grey furniture, glass elements, geometric shapes, ambient lighting',
-  japanese: 'Japanese wabi-sabi style: low wooden furniture, neutral earth tones, zen minimalism',
+  nordic: 'Scandinavian Nordic style: light wood furniture, white sofa, warm lighting, potted plants',
+  modern: 'Modern style: dark grey furniture, glass elements, geometric shapes',
+  japanese: 'Japanese wabi-sabi style: low wooden furniture, neutral tones, zen minimalism',
   cafe: 'Industrial cafe style: iron furniture, Edison bulb lighting, wooden accents',
-  luxury: 'Luxury style: velvet furniture, gold accents, crystal lighting, opulent',
-  minimal: 'Ultra minimal style: white and grey furniture, clean simple lines'
+  luxury: 'Luxury style: velvet furniture, gold accents, crystal lighting',
+  minimal: 'Ultra minimal style: white and grey furniture, clean lines'
 };
 
 app.post('/generate', upload.single('image'), async (req, res) => {
@@ -29,49 +29,24 @@ app.post('/generate', upload.single('image'), async (req, res) => {
     const base64Image = imageBuffer.toString('base64');
     const mimeType = req.file.mimetype;
 
-    const analysis = await openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{
         role: 'user',
         content: [
           { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
-          { type: 'text', text: `Analyze this vacant Japanese apartment room. Return ONLY these details in this exact format:
-LAYOUT: [room type, approximate size]
-WALLS: [exact colors and materials]
-FLOOR: [exact material and color]
-CEILING: [height, features like beams or lighting]
-WINDOWS: [number, size, frame color, position]
-FIXED: [AC unit position, kitchen details, any fixed elements]
-CAMERA: [angle, height, focal length description]` }
+          { type: 'text', text: `Describe this vacant room in extreme detail: exact wall colors, floor material and color, ceiling height, window positions, door positions, window frame colors, fixed elements like kitchen island or AC unit. Be very specific about dimensions and colors.` }
         ]
       }],
-      max_tokens: 400
+      max_tokens: 600
     });
 
     fs.unlinkSync(imagePath);
-    const roomDesc = analysis.choices[0].message.content;
-
-    const prompt = `Professional real estate staging photo of a furnished Japanese apartment.
-ROOM DETAILS (keep exactly as described):
-${roomDesc}
-
-FURNITURE TO ADD (${stylePrompts[style]}):
-- Small sofa appropriate for room size
-- Coffee table
-- Rug under sofa
-- Indoor plant
-- Floor lamp
-
-STRICT RULES:
-- Same camera angle, height and focal length as original
-- Keep ALL structural elements exactly as described
-- Furniture size must match room proportions
-- Photorealistic, cozy and warm atmosphere
-- Wide angle shot, real estate staging style`;
+    const roomDesc = response.choices[0].message.content;
 
     const imageResponse = await openai.images.generate({
       model: 'gpt-image-2',
-      prompt: prompt,
+      prompt: `Professional real estate photo of a furnished Japanese apartment. Room: ${roomDesc}. Style: ${stylePrompts[style]}. STRICT RULES: Keep exact same walls, floors, windows, window frame colors exactly as described. Do not change room size or proportions. Do not change field of view or focal length. Add only sofa, coffee table, rug, plants. Photorealistic.`,
       size: '1024x1024',
       n: 1
     });
