@@ -35,7 +35,7 @@ app.post('/generate', upload.single('image'), async (req, res) => {
         role: 'user',
         content: [
           { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
-          { type: 'text', text: `Describe this vacant room in extreme detail: exact wall colors, floor material and color, ceiling height, window positions, door positions, fixed elements like kitchen island or AC unit. Be very specific about dimensions and colors. This will be used to recreate the exact same room.` }
+          { type: 'text', text: `Describe this vacant room in extreme detail: exact wall colors, floor material and color, ceiling height, window positions, door positions, window frame colors, fixed elements like kitchen island or AC unit. Be very specific about dimensions and colors.` }
         ]
       }],
       max_tokens: 600
@@ -46,7 +46,7 @@ app.post('/generate', upload.single('image'), async (req, res) => {
 
     const imageResponse = await openai.images.generate({
       model: 'gpt-image-2',
-      prompt: `Professional real estate photo of a furnished Japanese apartment. Room: ${roomDesc}. Style: ${stylePrompts[style]}. Keep exact same walls, floors, windows. Add sofa, coffee table, rug, plants. Photorealistic.`,
+      prompt: `Professional real estate photo of a furnished Japanese apartment. Room: ${roomDesc}. Style: ${stylePrompts[style]}. STRICT RULES: Keep exact same walls, floors, windows, window frame colors exactly as described. Do not change room size or proportions. Do not change field of view or focal length. Add only sofa, coffee table, rug, plants. Photorealistic.`,
       size: '1024x1024',
       n: 1
     });
