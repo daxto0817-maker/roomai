@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROOMAI — 空室をリアルな暮らしへ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0d;
+    --surface: #1a1a17;
+    --surface2: #242420;
+    --border: #2e2e2a;
+    --accent: #c8a96e;
+    --accent2: #e8c98e;
+    --text: #f0ede6;
+    --text-muted: #8a8778;
+    --text-dim: #5a5a52;
+    --success: #6db88a;
+    --error: #d96b5a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  header {
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(15,15,13,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+  }
+
+  .logo span {
+    color: var(--text);
+    font-style: italic;
+  }
+
+  .badge {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 2px;
+  }
+
+  /* Main */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+
+  .hero-label {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero p {
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.8;
+  }
+
+  /* Steps */
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 48px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .step {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    transition: background 0.3s;
+  }
+
+  .step:last-child { border-right: none; }
+
+  .step.active { background: var(--surface2); }
+  .step.done { background: var(--surface); }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .step.active .step-num {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .step.done .step-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  .step-label {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .step.active .step-label { color: var(--text); }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 40px;
+    margin-bottom: 24px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    padding: 60px 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(200, 169, 110, 0.04);
+  }
+
+  .upload-zone input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    opacity: 0.4;
+  }
+
+  .upload-zone p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .upload-zone small {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .upload-preview {
+    display: none;
+    position: relative;
+  }
+
+  .upload-preview img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 2px;
+  }
+
+  .upload-preview .change-btn {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: rgba(15,15,13,0.8);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    font-family: 'Noto Sans JP', sans-serif;
+    backdrop-filter: blur(8px);
+  }
+
+  /* Style selector */
+  .style-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .style-card {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .style-card:hover {
+    border-color: var(--text-muted);
+    background: var(--surface2);
+  }
+
+  .style-card.selected {
+    border-color: var(--accent);
+    background: rgba(200, 169, 110, 0.08);
+  }
+
+  .style-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+
+  .style-name {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .style-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* API Key input */
+  .input-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .input-field {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-field:focus { border-color: var(--accent); }
+  .input-field::placeholder { color: var(--text-dim); }
+
+  /* Generate button */
+  .generate-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 2px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .generate-btn:hover:not(:disabled) {
+    background: var(--accent2);
+    transform: translateY(-1px);
+  }
+
+  .generate-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Loading */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,15,13,0.9);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .loading-overlay.active { display: flex; }
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--text-muted);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  /* Result */
+  .result-section {
+    display: none;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .result-section.visible { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .comparison-panel {
+    position: relative;
+  }
+
+  .comparison-panel img {
+    width: 100%;
+    height: 380px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .comparison-label {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(15,15,13,0.8);
+    backdrop-filter: blur(8px);
+    padding: 6px 14px;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-radius: 2px;
+  }
+
+  .after-label { color: var(--accent); }
+
+  /* CTA */
+  .cta-box {
+    background: linear-gradient(135deg, var(--surface2) 0%, rgba(200,169,110,0.06) 100%);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .cta-box h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    margin-bottom: 8px;
+  }
+
+  .cta-box p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+    font-weight: 300;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cta-primary {
+    padding: 16px 40px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 2px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    letter-spacing: 0.1em;
+    transition: all 0.2s;
+  }
+
+  .cta-primary:hover {
+    background: var(--accent2);
+    transform: translateY(-1px);
+  }
+
+  .cta-secondary {
+    padding: 16px 32px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .cta-secondary:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
+  }
+
+  /* Error */
+  .error-msg {
+    display: none;
+    background: rgba(217, 107, 90, 0.1);
+    border: 1px solid rgba(217, 107, 90, 0.3);
+    border-radius: 2px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--error);
+    margin-top: 12px;
+  }
+
+  .error-msg.visible { display: block; }
+
+  /* API key section */
+  .api-section {
+    margin-bottom: 24px;
+  }
+
+  .api-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .api-hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
+  /* Download btn */
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    background: none;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all 0.2s;
+    text-decoration: none;
+    margin-top: 16px;
+  }
+
+  .download-btn:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
+  }
+
+  @media (max-width: 640px) {
+    main { padding: 40px 20px; }
+    header { padding: 16px 20px; }
+    .comparison { grid-template-columns: 1fr; }
+    .card { padding: 24px; }
+    .steps { flex-direction: column; }
+    .step { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">ROOM<span>AI</span></div>
+  <div class="badge">Interior Staging</div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="hero-label">AI インテリアスタジング</div>
+    <h1>空室を、<em>暮らしへ。</em></h1>
+    <p>空室写真をアップロードするだけで、AIが理想のインテリアを配置します。</p>
+  </div>
+
+  <div class="steps">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <div class="step-label">写真をアップロード</div>
+    </div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      <div class="step-label">スタイルを選択</div>
+    </div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <div class="step-label">AI生成</div>
+    </div>
+
+  </div>
+
+
+
+  <!-- Upload -->
+  <div class="card" id="uploadCard">
+    <div class="card-title">01 — 空室写真をアップロード</div>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/heic">
+      <svg class="upload-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="12" width="40" height="30" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M4 32l10-10 8 8 6-6 16 14" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="34" cy="20" r="4" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M24 6v8M20 8l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <p>タップして写真を選択</p>
+      <small>カメラロールまたはファイルから選択できます</small>
+    </div>
+    <div class="upload-preview" id="uploadPreview">
+      <img id="previewImg" src="" alt="アップロード画像">
+      <button class="change-btn" onclick="resetUpload()">変更する</button>
+    </div>
+  </div>
+
+  <!-- Style -->
+  <div class="card" id="styleCard">
+    <div class="card-title">02 — インテリアスタイルを選択</div>
+    <div class="style-grid">
+      <div class="style-card selected" data-style="nordic" onclick="selectStyle(this)">
+        <div class="style-icon">🪵</div>
+        <div class="style-name">北欧ナチュラル</div>
+        <div class="style-desc">木目×ホワイト<br>温かみと清潔感</div>
+      </div>
+      <div class="style-card" data-style="modern" onclick="selectStyle(this)">
+        <div class="style-icon">⬛</div>
+        <div class="style-name">モダン</div>
+        <div class="style-desc">黒×グレー×ガラス<br>洗練されたシャープ感</div>
+      </div>
+      <div class="style-card" data-style="japanese" onclick="selectStyle(this)">
+        <div class="style-icon">🎋</div>
+        <div class="style-name">和モダン</div>
+        <div class="style-desc">畳×木×障子<br>日本の美意識</div>
+      </div>
+      <div class="style-card" data-style="cafe" onclick="selectStyle(this)">
+        <div class="style-icon">☕</div>
+        <div class="style-name">カフェスタイル</div>
+        <div class="style-desc">レンガ×アイアン<br>インダストリアル</div>
+      </div>
+      <div class="style-card" data-style="luxury" onclick="selectStyle(this)">
+        <div class="style-icon">✨</div>
+        <div class="style-name">ラグジュアリー</div>
+        <div class="style-desc">大理石×ゴールド<br>高級感と品格</div>
+      </div>
+      <div class="style-card" data-style="minimal" onclick="selectStyle(this)">
+        <div class="style-icon">⬜</div>
+        <div class="style-name">ミニマル</div>
+        <div class="style-desc">白×グレー<br>シンプルな空間</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <button class="generate-btn" id="generateBtn" onclick="generate()" disabled>
+    AIインテリアを生成する
+  </button>
+  <div class="error-msg" id="errorMsg"></div>
+
+  <!-- Result -->
+  <div class="result-section" id="resultSection">
+    <div class="card">
+      <div class="card-title">03 — 生成結果</div>
+      <div class="comparison">
+        <div class="comparison-panel">
+          <img id="beforeImg" src="" alt="Before">
+          <div class="comparison-label">Before</div>
+        </div>
+        <div class="comparison-panel">
+          <img id="afterImg" src="" alt="After">
+          <div class="comparison-label after-label">After — AI Staged</div>
+        </div>
+      </div>
+      <div style="text-align:center">
+        <a class="download-btn" id="downloadBtn" href="#" download="roomai-staged.png">
+          ↓ 画像をダウンロード
+        </a>
+      </div>
+    </div>
+
+    <div class="cta-box">
+      <h3>別の写真でも試してみる？</h3>
+      <div class="cta-buttons">
+        <button class="cta-secondary" onclick="resetAll()">別の写真で試す</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">AIがインテリアを配置しています...</div>
+</div>
+
+<script>
+  const API_ENDPOINT = 'https://retype-everglade-renewably.ngrok-free.dev';
+  let uploadedFile = null;
+  let uploadedDataUrl = null;
+  let selectedStyle = 'nordic';
+
+  const stylePrompts = {
+    nordic: 'Scandinavian Nordic interior design, light wood furniture, white walls, cozy warm lighting, minimal decor, clean lines, natural materials, potted plants',
+    modern: 'Modern contemporary interior design, dark grey and black furniture, glass elements, geometric shapes, ambient lighting, sophisticated and sleek',
+    japanese: 'Japanese wabi-sabi interior design, low wooden furniture, shoji screens, tatami elements, neutral earth tones, zen minimalism, natural textures',
+    cafe: 'Industrial cafe style interior, exposed brick texture, iron furniture, warm Edison bulb lighting, wooden accents, coffee shop aesthetic',
+    luxury: 'Luxury high-end interior design, marble surfaces, gold accents, velvet furniture, crystal lighting, opulent and refined',
+    minimal: 'Ultra minimal interior design, white and light grey, clean empty spaces, simple furniture, natural light, serene and calm'
+  };
+
+  // File upload
+  const fileInput = document.getElementById('fileInput');
+  const uploadZone = document.getElementById('uploadZone');
+  const uploadPreview = document.getElementById('uploadPreview');
+  const previewImg = document.getElementById('previewImg');
+
+  fileInput.addEventListener('change', handleFile);
+
+  uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('drag-over');
+  });
+
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  });
+
+  function handleFile(e) {
+    const file = e.target.files[0];
+    if (file) processFile(file);
+  }
+
+  function processFile(file) {
+    if (!file.type.startsWith('image/')) return;
+    uploadedFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      uploadedDataUrl = e.target.result;
+      previewImg.src = uploadedDataUrl;
+      document.getElementById('uploadZone').style.display = 'none';
+      uploadPreview.style.display = 'block';
+      updateStep(2);
+      checkReady();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resetUpload() {
+    uploadedFile = null;
+    uploadedDataUrl = null;
+    document.getElementById('uploadZone').style.display = 'block';
+    uploadPreview.style.display = 'none';
+    fileInput.value = '';
+    updateStep(1);
+    checkReady();
+  }
+
+  function selectStyle(el) {
+    document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedStyle = el.dataset.style;
+  }
+
+  function checkReady() {
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = !uploadedFile;
+  }
+
+  function updateStep(active) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById('step' + i);
+      el.classList.remove('active', 'done');
+      if (i < active) el.classList.add('done');
+      if (i === active) el.classList.add('active');
+    }
+  }
+
+  async function generate() {
+    if (!uploadedFile) return;
+
+
+    updateStep(3);
+    document.getElementById('loadingOverlay').classList.add('active');
+    document.getElementById('errorMsg').classList.remove('visible');
+    document.getElementById('resultSection').classList.remove('visible');
+
+    try {
+      // Cloudflare Tunnel のセッション確立
+      await fetch(`${API_ENDPOINT}/health`);
+
+      const formData = new FormData();
+      formData.append('image', uploadedFile);
+      formData.append('style', selectedStyle);
+
+      const response = await fetch(`${API_ENDPOINT}/generate`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || '生成エラー');
+
+      const generatedImageUrl = `data:image/png;base64,${data.image}`;
+
+      // Show results
+      document.getElementById('beforeImg').src = uploadedDataUrl;
+      document.getElementById('afterImg').src = generatedImageUrl;
+      document.getElementById('downloadBtn').href = generatedImageUrl;
+      document.getElementById('resultSection').classList.add('visible');
+      updateStep(4);
+
+      // Scroll to result
+      setTimeout(() => {
+        document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+
+    } catch (err) {
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = `エラー: ${err.message}`;
+      errorMsg.classList.add('visible');
+      updateStep(2);
+    } finally {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+  }
+
+  function resetAll() {
+    resetUpload();
+    document.getElementById('resultSection').classList.remove('visible');
+    updateStep(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+
+</script>
+</body>
+</html>
