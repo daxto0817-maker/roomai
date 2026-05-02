@@ -40,10 +40,10 @@ STRICT RULES:
 - Same camera angle and perspective as original`;
 
     const response = await openai.images.edit({
-      model: 'dall-e-2',
+      model: 'dall-e-3',
       image: fs.createReadStream(imagePath),
       prompt: prompt,
-      size: '512x512',
+      size: '1024x1024',
     });
 
     fs.unlinkSync(imagePath);
