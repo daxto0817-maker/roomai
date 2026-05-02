@@ -13,44 +13,30 @@ app.use(express.json());
 app.options('*', cors());
 
 const stylePrompts = {
-  nordic: 'Scandinavian Nordic style: light wood furniture, white sofa, warm lighting, potted plants',
-  modern: 'Modern style: dark grey furniture, glass elements, geometric shapes',
-  japanese: 'Japanese wabi-sabi style: low wooden furniture, neutral tones, zen minimalism',
+  nordic: 'Scandinavian Nordic style: light wood furniture, white sofa, warm lighting, potted plants, minimal decor',
+  modern: 'Modern style: dark grey furniture, glass elements, geometric shapes, ambient lighting',
+  japanese: 'Japanese wabi-sabi style: low wooden furniture, neutral earth tones, zen minimalism',
   cafe: 'Industrial cafe style: iron furniture, Edison bulb lighting, wooden accents',
-  luxury: 'Luxury style: velvet furniture, gold accents, crystal lighting',
-  minimal: 'Ultra minimal style: white and grey furniture, clean lines'
+  luxury: 'Luxury style: velvet furniture, gold accents, crystal lighting, opulent',
+  minimal: 'Ultra minimal style: white and grey furniture, clean simple lines'
 };
 
 app.post('/generate', upload.single('image'), async (req, res) => {
   try {
     const style = req.body.style || 'nordic';
     const imagePath = req.file.path;
-    const imageBuffer = fs.readFileSync(imagePath);
-    const base64Image = imageBuffer.toString('base64');
-    const mimeType = req.file.mimetype;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
-          { type: 'text', text: `Describe this vacant room in extreme detail: exact wall colors, floor material and color, ceiling height, window positions, door positions, window frame colors, fixed elements like kitchen island or AC unit. Be very specific about dimensions and colors.` }
-        ]
-      }],
-      max_tokens: 600
-    });
+    const prompt = `Japanese apartment room, same room structure and layout as original photo. Keep ALL walls, floors, ceiling, windows, doors, AC unit, kitchen island EXACTLY as they are. Keep exact same camera angle and perspective. Add ${stylePrompts[style]} furniture only: small sofa, coffee table, rug, indoor plant, floor lamp. Real estate staging photo style, wide angle shot, photorealistic, cozy and warm atmosphere.`;
 
-    fs.unlinkSync(imagePath);
-    const roomDesc = response.choices[0].message.content;
-
-    const imageResponse = await openai.images.generate({
+    const imageResponse = await openai.images.edit({
       model: 'gpt-image-2',
-      prompt: `Professional real estate photo of a furnished Japanese apartment. Room: ${roomDesc}. Style: ${stylePrompts[style]}. STRICT RULES: Keep exact same walls, floors, windows, window frame colors exactly as described. Do not change room size or proportions. Do not change field of view or focal length. Add only sofa, coffee table, rug, plants. Photorealistic.`,
+      image: fs.createReadStream(imagePath),
+      prompt: prompt,
       size: '1024x1024',
       n: 1
     });
 
+    fs.unlinkSync(imagePath);
     const imageData = imageResponse.data[0].b64_json;
     res.json({ success: true, image: imageData });
 
